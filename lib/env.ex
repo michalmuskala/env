@@ -1,42 +1,43 @@
 defmodule Env do
   use Application
 
+  @doc false
   def start(_type, _args) do
     Env.Supervisor.start_link()
   end
 
-  @spec get(atom, atom, strategy, term) :: term
-  def get(app, key, strategy, default \\ nil) do
-    case fetch(app, key, strategy) do
+  @spec get(atom, atom, Kyeword.t, term) :: term
+  def get(app, key, default \\ nil, opts \\ []) when is_list(opts) do
+    case fetch(app, key, opts) do
       {:ok, value} -> value
       :error       -> default
     end
   end
 
-  @spec fetch(atom, atom, strategy) :: {:ok, term} | :error
-  def fetch(app, key, strategy) do
+  @spec fetch(atom, atom, Kyeword.t) :: {:ok, term} | :error
+  def fetch(app, key, opts \\ []) when is_list(opts) do
     case lookup(app, key) do
       {:ok, value} ->
         value
       :error ->
-        refresh(app, key, strategy)
+        refresh(app, key, opts)
     end
   end
 
-  @spec fetch!(atom, atom, strategy) :: term | no_return
-  def fetch!(app, key, strategy) do
-    case fetch(app, key, strategy) do
+  @spec fetch!(atom, atom, Keyword.t) :: term | no_return
+  def fetch!(app, key, opts \\ []) when is_list(opts) do
+    case fetch(app, key, opts) do
       {:ok, value} ->
         value
       :error ->
-        raise "no value for key #{inspect key} of application " <>
-          "#{inspect application}, tried strategy:\n#{inspect strategy}"
+        raise "expected configuration value for key #{inspect key} " <>
+          "of application #{inspect app}, but it was absent"
     end
   end
 
-  @spec refresh(atom, atom, strategy) :: {:ok, term} | :error
-  def refresh(app, key, strategy) do
-    store(app, key, apply_strategy(strategy, app, key))
+  @spec refresh(atom, atom, Keyword.t) :: {:ok, term} | :error
+  def refresh(app, key, opts \\ []) when is_list(opts) do
+    store(app, key, load_and_resolve(app, key, opts))
   end
 
   @spec clear(atom, atom) :: :ok
@@ -47,7 +48,7 @@ defmodule Env do
 
   @spec clear(atom) :: :ok
   def clear(app) do
-    :ets.delete(Env, {app, key})
+    :ets.match_delete(Env, {app, :_})
     :ok
   end
 
@@ -63,44 +64,33 @@ defmodule Env do
     value
   end
 
-  defp apply_strategy(strategy, app, key, default \\ :error, transform \\ &(&1))
+  defp load_and_resolve(app, key, opts) do
+    transform = Keyword.get(opts, :transform, fn _, value -> value end)
 
-  defp apply_strategy([], _app, _key, default, _transform) do
-    default
-  end
-
-  defp apply_strategy([{:default, value} | rest], app, key, _default, transform) do
-    apply_strategy(rest, app, key, {:ok, value}, transform)
-  end
-
-  defp apply_strategy([{:transform, fun} | rest], app, key, default, _transform) do
-    apply_strategy(rest, app, key, default, fun)
-  end
-
-  defp apply_strategy([alternative | rest], app, key, default, transform) do
-    case try_alternative(alternative, app, key) do
-      {:ok, value} -> {:ok, transform.(value)}
-      :error       -> apply_strategy(rest, app, key, default, transform)
-    end
-  end
-
-  defp try_alternative(:application, app, key) do
     case :application.get_env(app, key) do
-      {:ok, {:system, _} = system} -> try_alternative(system, app, key)
-      {:ok, value}                 -> {:ok, value}
-      :error                       -> :error
+      {:ok, value} -> {:ok, resolve(value, app, [key], transform)}
+      :undefined   -> :error
     end
   end
 
-  defp try_alternative(:system, app, key) do
-    name = key |> Atom.to_string |> String.upcase
-    try_alternative({:system, name}, app, key)
-  end
-
-  defp try_alternative({:system, name}, _app, _key) when is_binary(name) do
+  @doc false
+  def resolve({:system, name}, app, path, transform) do
+    path = Enum.reverse(path)
     case :os.getenv(String.to_char_list(name)) do
-      false -> :error
-      value -> {:ok, List.to_string(value)}
+      false ->
+        raise "expected environment variable #{name} to be set, as required in " <>
+          "configuration of application #{app} under path #{inspect path}"
+      value ->
+        transform.(path, List.to_string(value))
     end
+  end
+
+  def resolve([{key, value} | rest], app, path, transform) when is_atom(key) do
+    value = resolve(value, app, [key | path], transform)
+    [{key, value} | resolve(rest, app, path, transform)]
+  end
+
+  def resolve(value, _app, _path, _transform) do
+    value
   end
 end
