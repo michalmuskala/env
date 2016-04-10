@@ -89,7 +89,7 @@ defmodule Env do
       false
 
   """
-  @spec get(Application.app, Application.key, Kyeword.t, term) :: term
+  @spec get(Application.app, Application.key, Keyword.t, term) :: term
   def get(app, key, default \\ nil, opts \\ []) when is_list(opts) do
     case fetch(app, key, opts) do
       {:ok, value} -> value
@@ -116,7 +116,7 @@ defmodule Env do
       :error
 
   """
-  @spec fetch(Application.app, Application.key, Kyeword.t) :: {:ok, term} | :error
+  @spec fetch(Application.app, Application.key, Keyword.t) :: {:ok, term} | :error
   def fetch(app, key, opts \\ []) when is_list(opts) do
     case lookup(app, key) do
       {:ok, value} ->
