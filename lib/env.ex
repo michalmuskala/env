@@ -70,6 +70,9 @@ defmodule Env do
   """
   use Application
 
+  @type app :: Application.app
+  @type key :: Application.key
+
   @doc false
   def start(_type, _args) do
     Env.Supervisor.start_link()
@@ -96,7 +99,7 @@ defmodule Env do
       false
 
   """
-  @spec get(Application.app, Application.key, Keyword.t, term) :: term
+  @spec get(app, key, Keyword.t, term) :: term
   def get(app, key, default \\ nil, opts \\ []) when is_list(opts) do
     case fetch(app, key, opts) do
       {:ok, value} -> value
@@ -123,7 +126,7 @@ defmodule Env do
       :error
 
   """
-  @spec fetch(Application.app, Application.key, Keyword.t) :: {:ok, term} | :error
+  @spec fetch(app, key, Keyword.t) :: {:ok, term} | :error
   def fetch(app, key, opts \\ []) when is_list(opts) do
     case lookup(app, key) do
       {:ok, value} ->
@@ -152,7 +155,7 @@ defmodule Env do
       ** (RuntimeError) no configuration value for key :other_key of :env
 
   """
-  @spec fetch!(Application.app, Application.key, Keyword.t) :: term | no_return
+  @spec fetch!(app, key, Keyword.t) :: term | no_return
   def fetch!(app, key, opts \\ []) when is_list(opts) do
     case fetch(app, key, opts) do
       {:ok, value} ->
@@ -185,7 +188,7 @@ defmodule Env do
       {:ok, :new_value}
 
   """
-  @spec refresh(Application.app, Application.key, Keyword.t) :: {:ok, term} | :error
+  @spec refresh(app, key, Keyword.t) :: {:ok, term} | :error
   def refresh(app, key, opts \\ []) when is_list(opts) do
     store(app, key, load_and_resolve(app, key, opts))
   end
@@ -193,7 +196,7 @@ defmodule Env do
   @doc """
   Clears the cache for value of `key` in `app`'s environment.
   """
-  @spec clear(Application.app, Application.key) :: :ok
+  @spec clear(app, key) :: :ok
   def clear(app, key) do
     :ets.delete(Env, {app, key})
     :ok
@@ -202,7 +205,7 @@ defmodule Env do
   @doc """
   Clears the cache for all values in `app`'s environment.
   """
-  @spec clear(Application.app) :: :ok
+  @spec clear(app) :: :ok
   def clear(app) do
     :ets.match_delete(Env, {{app, :_}, :_})
     :ok
