@@ -73,6 +73,17 @@ defmodule EnvTest do
     end)
   end
 
+  test "config_change/4" do
+    with_env(:app, %{:foo => :foo, :bar => :bar}, fn ->
+      assert {:ok, :foo} == Env.fetch(:env, :foo)
+      assert {:ok, :bar} == Env.fetch(:env, :bar)
+      Env.config_change(:env, [{:bar, :baz}], [{:baz, :baz}], [:foo])
+    end)
+    assert {:ok, :baz} == Env.fetch(:env, :bar)
+    assert {:ok, :baz} == Env.fetch(:env, :baz)
+    assert :error      == Env.fetch(:env, :foo)
+  end
+
   test "resolve/4 with {:system, name}" do
     name = generate_name()
     with_env(:os, [{name, "foo"}], fn ->

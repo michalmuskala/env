@@ -208,6 +208,29 @@ defmodule Env do
     :ok
   end
 
+  @doc """
+  Function for use in the `:application.config_change/3` callback.
+
+  The callback is called by an application after a code replacement, if
+  there are any changes to the configuration parameters.
+  This function gives a convenient way to propagate any such changes to Env.
+
+  ## Example
+
+      def config_change(changed, new, removed) do
+        Env.config_change(:my_app, changed, new, removed)
+      end
+
+  """
+  @spec config_change(Application.app, pairs, pairs, [Application.key]) :: :ok
+    when pairs: [{Application.key, term}]
+  def config_change(app, changed, new, removed) do
+    Enum.each(removed, &clear(app, &1))
+    Enum.each(changed, fn {key, value} -> store(app, key, {:ok, value}) end)
+    Enum.each(new,     fn {key, value} -> store(app, key, {:ok, value}) end)
+    :ok
+  end
+
   defp lookup(app, key) do
     case :ets.lookup(Env, {app, key}) do
       [{_, value}] -> {:ok, value}
