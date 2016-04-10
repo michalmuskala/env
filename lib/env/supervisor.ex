@@ -7,8 +7,8 @@ defmodule Env.Supervisor do
     Supervisor.start_link(__MODULE__, :ok)
   end
 
-  def init(_) do
-    _ = :ets.new(Env, [:set, :public, :named_table, read_concurrency: true])
+  def init(:ok) do
+    Env = :ets.new(Env, [:set, :public, :named_table, read_concurrency: true])
     supervise([], strategy: :one_for_one)
   end
 end
