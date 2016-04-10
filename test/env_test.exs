@@ -73,7 +73,7 @@ defmodule EnvTest do
     end)
   end
 
-  test "config_change/4" do
+  test "config_change/5" do
     with_env(:app, %{:foo => :foo, :bar => :bar}, fn ->
       assert {:ok, :foo} == Env.fetch(:env, :foo)
       assert {:ok, :bar} == Env.fetch(:env, :bar)

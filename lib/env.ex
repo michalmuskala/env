@@ -215,6 +215,10 @@ defmodule Env do
   there are any changes to the configuration parameters.
   This function gives a convenient way to propagate any such changes to Env.
 
+  ## Options
+
+    * `:transform` - transformer function, see module documentation
+
   ## Example
 
       def config_change(changed, new, removed) do
@@ -222,13 +226,20 @@ defmodule Env do
       end
 
   """
-  @spec config_change(Application.app, pairs, pairs, [Application.key]) :: :ok
-    when pairs: [{Application.key, term}]
-  def config_change(app, changed, new, removed) do
+  @spec config_change(app, pairs, pairs, [key], Keyword.t) :: :ok
+    when pairs: [{key, term}]
+  def config_change(app, changed, new, removed, opts \\ []) do
+    transform = Keyword.get(opts, :transform, fn _, value -> value end)
+
     Enum.each(removed, &clear(app, &1))
-    Enum.each(changed, fn {key, value} -> store(app, key, {:ok, value}) end)
-    Enum.each(new,     fn {key, value} -> store(app, key, {:ok, value}) end)
+    Enum.each(changed, &resolve_and_store(&1, app, transform))
+    Enum.each(new,     &resolve_and_store(&1, app, transform))
     :ok
+  end
+
+  defp resolve_and_store({key, value}, app, transform) do
+    value = resolve(value, app, [key], transform)
+    store(app, key, {:ok, value})
   end
 
   defp lookup(app, key) do
