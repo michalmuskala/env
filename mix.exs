@@ -12,6 +12,7 @@ defmodule Env.Mixfile do
      start_permanent: Mix.env == :prod,
      description: description,
      deps: deps,
+     package: package,
      docs: docs]
   end
 
@@ -29,6 +30,12 @@ defmodule Env.Mixfile do
     """
     Env is an improved application configuration reader for Elixir.
     """
+  end
+
+  defp package do
+    [maintainers: ["Michał Muskała"],
+     licenses: ["Apache 2.0"],
+     links: %{"GitHub" => "https://github.com/michalmuskala/env"}]
   end
 
   defp docs do
