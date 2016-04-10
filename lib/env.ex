@@ -30,8 +30,7 @@ defmodule Env do
       {:ok, value} ->
         value
       :error ->
-        raise "expected configuration value for key #{inspect key} " <>
-          "of application #{inspect app}, but it was absent"
+        raise "no configuration value for key #{inspect key} of #{inspect app}"
     end
   end
 
@@ -48,7 +47,7 @@ defmodule Env do
 
   @spec clear(atom) :: :ok
   def clear(app) do
-    :ets.match_delete(Env, {app, :_})
+    :ets.match_delete(Env, {{app, :_}, :_})
     :ok
   end
 
@@ -74,6 +73,15 @@ defmodule Env do
   end
 
   @doc false
+  def resolve({:system, name, default}, _app, path, transform) do
+    case :os.getenv(String.to_char_list(name)) do
+      false ->
+        default
+      value ->
+        path = Enum.reverse(path)
+        transform.(path, List.to_string(value))
+    end
+  end
   def resolve({:system, name}, app, path, transform) do
     path = Enum.reverse(path)
     case :os.getenv(String.to_char_list(name)) do
