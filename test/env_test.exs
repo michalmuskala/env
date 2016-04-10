@@ -108,7 +108,7 @@ defmodule EnvTest do
       [:key, :sub2, :nested], value -> String.downcase(value)
     end
 
-    with_env(:os, %{name => "Foo"}, fn ->
+    with_env(:os, [{name, "Foo"}], fn ->
       expected = [sub1: "FOO", sub2: [nested: "foo"]]
       config   = [sub1: {:system, name}, sub2: [nested: {:system, name}]]
       assert expected == Env.resolve(config, :env, [:key], transform)
