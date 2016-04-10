@@ -1,0 +1,29 @@
+language: elixir
+
+cache:
+  apt: true
+  directories:
+    - ~/.mix
+    - deps
+
+elixir:
+  - 1.0
+  - 1.1
+  - 1.2
+
+otp_release:
+  - 18.1
+
+install:
+  - mix local.hex --force
+  - mix deps.get
+
+after_script:
+  - mix deps.get --only docs
+
+script:
+  - mix test
+
+notifications:
+  recipients:
+    - michal@muskala.eu
