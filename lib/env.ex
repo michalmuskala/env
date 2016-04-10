@@ -24,6 +24,13 @@ defmodule Env do
   read the value again ignoring the cache or `Env.clear/1` and `Env.clear/2` in
   order to clear the cache.
 
+  *WARNING*: because Env uses ETS table to store it's cache it is not available
+  at compile-time. When you need some compile-time configuration using regular
+  `Application.get_env/3` is probably the best option. This should not be a huge
+  problem in practice, because configuration should be moved as much as possible
+  to the runtime, allowing for easy changes, which is not possible with compile-time
+  settings.
+
   ## Example
 
   With configuration in `config/config.exs` as follows:
