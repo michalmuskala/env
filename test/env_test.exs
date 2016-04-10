@@ -75,7 +75,7 @@ defmodule EnvTest do
 
   test "resolve/4 with {:system, name}" do
     name = generate_name()
-    with_env(:os, %{name => "foo"}, fn ->
+    with_env(:os, [{name, "foo"}], fn ->
       assert "foo" == Env.resolve({:system, name}, :env, [:key], fn _, x -> x end)
     end)
 
@@ -88,7 +88,7 @@ defmodule EnvTest do
     name = generate_name()
     assert "foo" == Env.resolve({:system, name, "foo"}, :env, [:key], fn _, x -> x end)
 
-    with_env(:os, %{name => "bar"}, fn ->
+    with_env(:os, [{name, "bar"}], fn ->
       assert "bar" == Env.resolve({:system, name, "foo"}, :env, [:key], fn _, x -> x end)
     end)
   end
@@ -96,7 +96,7 @@ defmodule EnvTest do
   test "resolve/4 with transform" do
     name = generate_name()
     transform = fn [:key], value -> String.to_integer(value) end
-    with_env(:os, %{name => "123"}, fn ->
+    with_env(:os, [{name, "123"}], fn ->
       assert 123 == Env.resolve({:system, name}, :env, [:key], transform)
     end)
   end
