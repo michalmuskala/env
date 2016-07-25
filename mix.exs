@@ -10,10 +10,10 @@ defmodule Env.Mixfile do
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: description,
-     deps: deps,
-     package: package,
-     docs: docs]
+     description: description(),
+     deps: deps(),
+     package: package(),
+     docs: docs()]
   end
 
   def application do
