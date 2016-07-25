@@ -84,6 +84,16 @@ defmodule EnvTest do
     assert :error      == Env.fetch(:env, :foo)
   end
 
+  test "resolve_inplace/3" do
+    name = generate_name()
+    with_env(:app, %{:foo => {:system, name}}, fn ->
+      with_env(:os, [{name, "foo"}], fn ->
+        Env.resolve_inplace(:env, :foo)
+        assert "foo" == Application.get_env(:env, :foo)
+      end)
+    end)
+  end
+
   test "resolve/4 with {:system, name}" do
     name = generate_name()
     with_env(:os, [{name, "foo"}], fn ->

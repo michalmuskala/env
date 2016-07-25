@@ -212,6 +212,26 @@ defmodule Env do
   end
 
   @doc """
+  Resolves all the Application configuration values and updates
+  the Application environment in place.
+
+  You can later access the values with `Application.get_env/3` as usual.
+
+  ## Options
+
+    * `:transform` - transformer function, see module documentation
+
+  """
+  @spec resolve_inplace(app, key, Keyword.t) :: :ok
+  def resolve_inplace(app, key, opts \\ []) do
+    transform = Keyword.get(opts, :transform, fn _, value -> value end)
+    value     = Application.fetch_env!(app, key)
+    resolved  = resolve(value, app, [key], transform)
+    Application.put_env(app, key, resolved)
+    :ok
+  end
+
+  @doc """
   Function for use in the `:application.config_change/3` callback.
 
   The callback is called by an application after a code replacement, if
