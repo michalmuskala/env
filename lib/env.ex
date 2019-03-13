@@ -288,7 +288,7 @@ defmodule Env do
 
   @doc false
   def resolve({:system, name, default}, _app, path, transform) do
-    case :os.getenv(String.to_char_list(name)) do
+    case :os.getenv(String.to_charlist(name)) do
       false ->
         default
       value ->
@@ -298,7 +298,7 @@ defmodule Env do
   end
   def resolve({:system, name}, app, path, transform) do
     path = Enum.reverse(path)
-    case :os.getenv(String.to_char_list(name)) do
+    case :os.getenv(String.to_charlist(name)) do
       false ->
         raise "expected environment variable #{name} to be set, as required in " <>
           "configuration of application #{app} under path #{inspect path}"
